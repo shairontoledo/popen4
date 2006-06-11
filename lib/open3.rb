@@ -6,8 +6,8 @@
 # one-click installer's history with the result that we will guess wrong for 
 # users who build their own Ruby install for win32.
 
-LIB_184VC6 = File.join( File.dirname(__FILE__), "1.8.4_VC++_6/open3.so" )
-LIB_182VC7 = File.join( File.dirname(__FILE__), "1.8.2_VC++_7/open3.so" )
+LIB_184VC6 = File.join( File.dirname(__FILE__), "1.8.4_VC6/open3.so" )
+LIB_182VC7 = File.join( File.dirname(__FILE__), "1.8.2_VC7/open3.so" )
 LIB_BUILT  = File.join( File.dirname(__FILE__), "./open3.so" )
 
 if File.exists?( LIB_184VC6 ) &&

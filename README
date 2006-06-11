@@ -31,8 +31,8 @@ No surprises--it's a new API on either platform.
 Presently POpen4 ships in four platform specific gems:
 
   POpen4-0.1.0-unix.gem
-  POpen4-0.1.0-win32-1.8.2-VC++7.gem
-  POpen4-0.1.0-win32-1.8.4-VC++6.gem
+  POpen4-0.1.0-win32-1.8.2-VC7.gem
+  POpen4-0.1.0-win32-1.8.4-VC6.gem
   POpen4-0.1.0-win32-source.gem
 
 Users of Linux, Unix, BSD, etc., will want the unix package. Ara's Open4 gem
