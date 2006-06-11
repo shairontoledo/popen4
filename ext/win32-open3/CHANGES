@@ -1,0 +1,26 @@
+== 0.3.0 - 3-Jun-2006
+* Now sets Process::Status.  Thanks go to Samuel Tesla and John-Mason
+  Shackelford for their patches.
+* Improved error messages.
+* Documentation updated with regards to the block form of the method calls.
+* Some internal reorganization that you don't care about.
+
+== 0.2.2 - 10-Feb-2006
+* Methods now support block form, and all handles are automatically closed
+  at the end of the block (via ensure).
+
+== 0.2.1 - 27-Oct-2005
+* Added a type check in the extconf.rb file and did some type mangling in
+  order to handle rb_pid_t in a backwards compatible way.  In other words,
+  you need this version to work with 1.8.3 or later.
+
+== 0.2.0 - 9-Jan-2005
+* Added the Open4 module and popen4 method.  Thanks go to Aslak Hellesoy for
+  the patch.
+* Added an optional 3rd parameter - the "show" flag.  See docs for details.
+* Made some documentation more rdoc friendly.
+* Moved the "examples" directory to the toplevel directory.
+* Added some information to the README file about possible compiler problems.
+
+== 0.1.0 - 8-Oct-2004
+* Initial release

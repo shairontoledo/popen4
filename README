@@ -1,0 +1,50 @@
+== Description
+POpen4 provides the Rubyist a single API across platforms for executing a 
+command in a child process with handles on stdout, stderr, stdin streams as well 
+as access to the process ID and exit status. It does very little other than to 
+provide an easy way to use either Ara Howard's Open4 library or the win32-popen3 
+library by Park Heesob and Daniel Berger depending on your platform and without
+having to code around the slight differences in their APIs. 
+
+Consider this my first attempt at a response to 
+{Daniel's request}[http://groups.google.com/group/comp.lang.ruby/msg/44ba016610fa8878]
+for a consensus on the API back in 2005.
+
+It is my hope that this project will be shortly absorbed or replaced with a 
+better solution. POpen4 offers very little in the way of features or 
+flexibility, but it does work across platforms without extra coding.
+== Notes
+Rather than adopting either Open4's API or win32-open3's (they differ in several
+respects, but most obviously in the order in which streams are passed to the 
+block) I am proposing a third API for couple of reasons. First, Open4 passes the
+PID first and win32-open3 passes stdin neither of which seem to me to be the 
+streams we are most likely to use when we don't need all four. POpen4 passes
+stdout and stderr first so that when the others are not required we can omit
+them from the block. Second, I thought it best to break everybody's code rather
+than to be a drop in replacement on one platform and be a surprise on another.
+No surprises--it's a new API on either platform.
+
+== Installation
+
+   $ gem install --remote --include-dependencies POpen4
+   
+Presently POpen4 ships in four platform specific gems:
+
+  POpen4-0.1.0-unix.gem
+  POpen4-0.1.0-win32-1.8.2-VC++7.gem
+  POpen4-0.1.0-win32-1.8.4-VC++6.gem
+  POpen4-0.1.0-win32-source.gem
+
+Users of Linux, Unix, BSD, etc., will want the unix package. Ara's Open4 gem
+is a dependency. Users of the Ruby One-Click Installer (OCI) will want to select
+the gem appropriate their version of Ruby. The real issue here is compiler 
+version. The wrong version will SEGFAULT due to some incompatibility somewhere
+in the VC++ compiler or libraries (which I really wish we could resolve, 
+but oh well). Others using a Windows platform but not the OCI will want to 
+compile from source using last of these gems. Be sure to have your environment 
+set up for doing a build before running <tt>gem install POpen4</tt>.
+
+== Acknowledgements
+Ara Howard, Park Heesob, Daniel Berger and others have done the real work. Many 
+thanks to them for the many hours they have poured into sharing their work with 
+the Ruby community at large.

@@ -1,0 +1,43 @@
+== Description
+This package provides an Open3.popen3 implementation for Win32 systems
+
+== Prerequisites
+Ruby 1.8.0 or later
+C++ compiler (if building from source)
+
+== Notes
+Not supported on Windows 95, 98, or ME.
+This is a stripped down version of Park Heesob's win32_popen package.
+
+== Installation
+ruby extconf.rb
+nmake
+ruby test\tc_open3.rb (optional)
+nmake site-install
+
+== Developer's Notes
+This is a repackaging of Heesob's win32_popen module.  The purpose for this is
+to create a unified API.
+
+The popen2 and posix_popen methods are not included in this release.  They
+were originally part of the win32_popen module, but have been left out.
+They will probably be added back in at a later date.
+
+There are a couple of differences in the Windows version for open3 (which also
+apply to open4) - the mode flag and the show flag.  For the mode, you can
+specify either 't' (text, the default) or 'b' (binary) as a second
+argument.  For the show flag, you can specify either true or false, which will
+show the console window, or not, depending on the value you pass.  The default
+is false.
+
+== Known Issues
+I have noticed that this package (and others) may segfault if you are using
+the latest version of the Ruby 1-click installer and VC++ 6.0.  This appears
+to be an issue between VC++ 7 (which the installer was built with) and VC++
+6.0.  Your best solution is to either upgrade your C compiler or to rebuild
+Ruby from scratch rather than using the installer.
+
+You can also download a precompiled binary from the project site.  Look for a
+file called 'open3-x.y.z-vc6.so' on the 'files' page, where 'x.y.z' is a
+version number, if you want a binary that's compatible with Curt Hibbs one
+click installer.

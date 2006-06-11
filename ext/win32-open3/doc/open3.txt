@@ -1,0 +1,75 @@
+= Description
+   An open3 library for Win32
+	
+= Synopsis
+   require 'win32/open3'
+	
+   Open3.popen3('ver'){ |io_in, io_out, io_err|
+      error = io_err.gets
+      if error
+         puts "Error: " + error.chomp
+         exit
+      end
+      puts "Result: " + io_out.readlines.last.chomp
+   }
+
+= Module functions
+Open3.popen3(command, mode='t', show=false)
+
+Open3.popen3(command, mode='t', show=false){ |io_in, io_out, io_err| ... }
+
+   Executes 'command', returning an array of three IO handles representing
+   STDIN, STDOUT and STDERR, respectively.  In block form these IO handles
+   are yielded back to the block and automatically closed at the end of the
+   block.
+	
+   You may optionally pass a mode flag of 't' (text, the default) or 'b'
+   (binary) to this method.
+	
+   If the 'show' variable is set to true, then a console window is shown.
+
+Open4.popen4(command, mode='t', show=false)
+
+Open4.popen4(command, mode='t', show=false){ |io_in, io_out, io_err, pid| ... }
+   
+   Executes 'command', returning an array consisting of three IO handles,
+   representing STDIN, STDOUT and STDERR, respectively, as well as the PID
+   of the newly generated process.  In block form these IO handles and pid
+   are yielded back to the block and automatically closed at the end of the
+   block.
+	
+   You may optionally pass a mode flag of 't' (text, the default) or 'b'
+   (binary) to this method.
+	
+   If the 'show' variable is set to true, then a console window is shown.
+	
+= Notes
+   This is a remake of Park Heesob's win32_popen package.  It has been reworked
+   in order to make the API (nearly) identical to the Open3 package currently
+   included in the Ruby standard library.
+	
+   For now only the popen3 and popen4 methods have been included.  In later
+   releases we will probably add the popen2 and posix_popen methods back in.
+
+= Acknowledgements
+   Thanks go to Samuel Tesla and John-Mason Shackelford for their patches that
+   enabled us to set Process::Status.
+	
+= Known Bugs  
+   None that I know of.  Please log any other bug reports on the RubyForge
+   project page at http://www.rubyforge.net/projects/win32utils.
+      
+= License
+   Ruby's
+        
+= Copyright
+   (C) 2003-2006 Daniel J. Berger, All Rights Reserved .
+       
+= Warranty
+   This package is provided "as is" and without any express or
+   implied warranties, including, without limitation, the implied
+   warranties of merchantability and fitness for a particular purpose.
+		
+= Authors
+   Park Heesob
+   Daniel J. Berger

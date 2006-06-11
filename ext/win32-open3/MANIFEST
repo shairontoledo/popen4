@@ -1,0 +1,13 @@
+CHANGES
+MANIFEST
+README
+extconf.rb
+
+doc/open3.txt
+
+examples/open3_test.rb
+
+ext/open3.c
+ext/open3.h
+
+test/tc_open3.rb
