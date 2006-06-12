@@ -1,8 +1,8 @@
-/***************************************************
+/**********************************************************************
  * open3.c
  *
  * Source for the win32-open3 extension.
- ***************************************************/
+ **********************************************************************/
 #include "ruby.h"
 #include "rubysig.h"
 #include "rubyio.h"
@@ -14,12 +14,12 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-/* Necessary to work with Ruby 1.8.3 or later */
 #ifdef HAVE_TYPE_RB_PID_T
 #define pid_t rb_pid_t
 #endif
 
 static VALUE win32_last_status = Qnil;
+static HANDLE pid_handle = NULL;
 
 static VALUE ruby_popen(char *, int, VALUE);
 
@@ -77,42 +77,28 @@ static char* rb_io_modenum_mode(int flags, char* mode){
    return mode;
 }
 
-/* Used to close io handle */
+// Used to close io handle
 static VALUE io_close(VALUE val) {
-   int i;
-   for(i=0; i<3; i++){
-      if(rb_funcall(RARRAY(val)->ptr[i], rb_intern("closed?"), 0) == Qfalse)
-         rb_funcall(RARRAY(val)->ptr[i], rb_intern("close"), 0);
-   }
-   return Qnil;
+    int i;
+    for(i=0;i<3;i++) {
+    	 if(rb_funcall(RARRAY(val)->ptr[i], rb_intern("closed?"),0)==Qfalse)
+    	 	rb_funcall(RARRAY(val)->ptr[i], rb_intern("close"),0);
+    }
+    return Qnil;
 }
 
-/*
- * call-seq:
- *    Open3.popen3(cmd, mode='t', show=false)
- *    Open3.popen3(cmd, mode='t', show=false){ |io_in, io_out, io_err| ... }
- * 
- * Executes 'command', returning an array of three IO handles representing
- * STDIN, STDOUT and STDERR, respectively.  In block form these IO handles
- * are yielded back to the block and automatically closed at the end of the
- * block.
- *  
- * You may optionally pass a mode flag of 't' (text, the default) or 'b'
- * (binary) to this method.
- *  
- * If the 'show' variable is set to true, then a console window is shown.
- */
-static VALUE win32_popen3(int argc, VALUE *argv, VALUE klass)
+static VALUE
+win32_popen3(int argc, VALUE *argv, VALUE klass)
 {
    VALUE pname, pmode, port;
-   VALUE v_show_window = Qfalse;
+   VALUE rbShowWindow = Qfalse;
    char mbuf[4];
    int tm = 0;
    char *mode = "t";
 
-   rb_scan_args(argc, argv, "12", &pname, &pmode, &v_show_window);
+   rb_scan_args(argc,argv,"12",&pname,&pmode,&rbShowWindow);
 
-   /* Mode can be either a string or a number */
+   // Mode can be either a string or a number
    if(!NIL_P(pmode)){
       if(FIXNUM_P(pmode)){
          mode = rb_io_modenum_mode(FIX2INT(pmode), mbuf);
@@ -132,19 +118,16 @@ static VALUE win32_popen3(int argc, VALUE *argv, VALUE klass)
       tm = _O_BINARY;
    }
 
-   port = ruby_popen(StringValuePtr(pname), tm, v_show_window);
-   
-   /* Ensure handles are closed in block form */
+   port = ruby_popen(StringValuePtr(pname),tm,rbShowWindow);
    if(rb_block_given_p()) {
-      rb_ensure(rb_yield_splat, port, io_close, port);
-      return win32_last_status;
+   		rb_ensure(rb_yield_splat,port,io_close,port);
+   		return win32_last_status;
    }
-   
    return port;
 }
 
 static BOOL RubyCreateProcess(char *cmdstring, HANDLE hStdin, HANDLE hStdout,
-   HANDLE hStderr, HANDLE *hProcess, pid_t *pid, VALUE v_show_window)
+   HANDLE hStderr, HANDLE *hProcess, pid_t *pid, VALUE rbShowWindow)
 {
    PROCESS_INFORMATION piProcInfo;
    STARTUPINFO siStartInfo;
@@ -158,9 +141,8 @@ static BOOL RubyCreateProcess(char *cmdstring, HANDLE hStdin, HANDLE hStdout,
       if (!(x = GetEnvironmentVariable("COMSPEC", s1, i)))
          return x;
 
-    /* Explicitly check if we are using COMMAND.COM.  If we are
-     * then use the w9xpopen hack.
-     */
+    // Explicitly check if we are using COMMAND.COM.  If we are
+    // then use the w9xpopen hack.
     comshell = s1 + x;
     while (comshell >= s1 && *comshell != '\\')
          --comshell;
@@ -196,7 +178,7 @@ static BOOL RubyCreateProcess(char *cmdstring, HANDLE hStdin, HANDLE hStdout,
    siStartInfo.hStdError = hStderr;
    siStartInfo.wShowWindow = SW_HIDE;
 
-   if(v_show_window == Qtrue)
+   if(rbShowWindow == Qtrue)
       siStartInfo.wShowWindow = SW_SHOW;
 
    // Try the command first without COMSPEC
@@ -234,28 +216,25 @@ static BOOL RubyCreateProcess(char *cmdstring, HANDLE hStdin, HANDLE hStdout,
       &siStartInfo,
       &piProcInfo)
     ){
-      /* Close the handles now so anyone waiting is woken. */
+      // Close the handles now so anyone waiting is woken.
       CloseHandle(piProcInfo.hThread);
 
-      /* Return process handle */
+      // Return process handle
       *hProcess = piProcInfo.hProcess;
       *pid = (pid_t)piProcInfo.dwProcessId;
       return TRUE;
    }
 
-   rb_raise(rb_eRuntimeError, "CreateProcess() failed: %s",
-      ErrorDescription(GetLastError())
-   );
-   
+   //rb_raise(rb_eRuntimeError,"CreateProcess %s", s2);
+   //rb_raise(rb_eRuntimeError,"CreateProcess %s", cmdstring);
+   rb_raise(rb_eRuntimeError, ErrorDescription(GetLastError()));
    return FALSE;
 }
 
-/* Set the Process::Status.  Based on patches by Samuel Tesla and John-Mason
- * Shackelford.
- */
-static void win32_set_last_status(const int status, const int pid)
+static void
+win32_set_last_status(const int status, const int pid)
 {
-  /* rb_last_status is defined in process.c in the main ruby.exe */
+  // rb_last_status is defined in process.c in the main ruby.exe
   __declspec (dllimport) extern VALUE rb_last_status;
   VALUE klass = rb_path2class("Process::Status");
   VALUE process_status = rb_obj_alloc(klass);
@@ -265,23 +244,26 @@ static void win32_set_last_status(const int status, const int pid)
   win32_last_status = process_status;
 }
 
-static void win32_pipe_finalize(OpenFile *file, int noraise)
+static void
+win32_pipe_finalize(OpenFile *file, int noraise)
 {
-   int status;
-   HANDLE handle;
-
-   handle = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, file->pid);
-   
-   if(handle != NULL){
-      GetExitCodeProcess(handle, &status);
-      if(status != STILL_ACTIVE){
+  int status;
+  HANDLE handle;
+  if(pid_handle!=NULL)
+  {
+	GetExitCodeProcess(pid_handle, &status);
+	if(status != STILL_ACTIVE)
+	{
 	  	win32_set_last_status(status, file->pid);
-      }
-   }
+	}
+  }
 }
 
+
 /* The following code is based off of KB: Q190351 */
-static VALUE ruby_popen(char *cmdstring, int mode, VALUE v_show_window)
+
+static VALUE
+ruby_popen(char *cmdstring, int mode, VALUE rbShowWindow)
 {
    HANDLE hChildStdinRd, hChildStdinWr, hChildStdoutRd, hChildStdoutWr,
      hChildStderrRd, hChildStderrWr, hChildStdinWrDup, hChildStdoutRdDup,
@@ -305,16 +287,15 @@ static VALUE ruby_popen(char *cmdstring, int mode, VALUE v_show_window)
    saAttr.lpSecurityDescriptor = NULL;
 
    if(!CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0)) {
-      rb_raise(rb_eRuntimeError, "CreatePipe() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+     rb_raise(rb_eRuntimeError,"CreatePipe() Error");
    }
 
-   /* Create new output read handle and the input write handle. Set
+   /***********************************************************************
+    * Create new output read handle and the input write handle. Set
     * the inheritance properties to FALSE. Otherwise, the child inherits
     * the these handles; resulting in non-closeable handles to the pipes
     * being created.
-    */
+    **********************************************************************/
    fSuccess = DuplicateHandle(
       GetCurrentProcess(),
       hChildStdinWr,
@@ -325,18 +306,14 @@ static VALUE ruby_popen(char *cmdstring, int mode, VALUE v_show_window)
       DUPLICATE_SAME_ACCESS
    );
    if(!fSuccess){
-      rb_raise(rb_eRuntimeError, "DuplicateHandle() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+      rb_raise(rb_eRuntimeError,"DuplicateHandle");
    }
 
    // Close the inheritable version of ChildStdin that we're using
    CloseHandle(hChildStdinWr);
 
    if(!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0)) {
-      rb_raise(rb_eRuntimeError, "CreatePipe() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+      rb_raise(rb_eRuntimeError,"CreatePipe");
    }
 
    fSuccess = DuplicateHandle(
@@ -350,18 +327,14 @@ static VALUE ruby_popen(char *cmdstring, int mode, VALUE v_show_window)
    );
 
    if(!fSuccess){
-      rb_raise(rb_eRuntimeError, "DuplicateHandle() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+      rb_raise(rb_eRuntimeError,"DuplicateHandle");
    }
 
    // Close the inheritable version of ChildStdout that we're using.
    CloseHandle(hChildStdoutRd);
 
    if(!CreatePipe(&hChildStderrRd, &hChildStderrWr, &saAttr, 0)) {
-      rb_raise(rb_eRuntimeError, "CreatePipe() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+      rb_raise(rb_eRuntimeError,"CreatePipe");
    }
 
    fSuccess = DuplicateHandle(
@@ -375,9 +348,7 @@ static VALUE ruby_popen(char *cmdstring, int mode, VALUE v_show_window)
    );
 
    if (!fSuccess) {
-      rb_raise(rb_eRuntimeError, "DuplicateHandle() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+      rb_raise(rb_eRuntimeError,"DuplicateHandle");
    }
 
    // Close the inheritable version of ChildStdErr that we're using.
@@ -404,7 +375,7 @@ static VALUE ruby_popen(char *cmdstring, int mode, VALUE v_show_window)
    file_count = 3;
 
    if(!RubyCreateProcess(cmdstring,hChildStdinRd,hChildStdoutWr,
-      hChildStderrWr, &hProcess, &pid, v_show_window))
+      hChildStderrWr,&hProcess,&pid, rbShowWindow))
    {
       return Qnil;
    }
@@ -418,6 +389,7 @@ static VALUE ruby_popen(char *cmdstring, int mode, VALUE v_show_window)
    p1 =  io_alloc(rb_cIO);
    MakeOpenFile(p1, fptr);
 
+   pid_handle = hProcess;
    fptr->finalize = win32_pipe_finalize;
    fptr->mode = modef;
    fptr->pid = pid;
@@ -479,37 +451,33 @@ static VALUE ruby_popen(char *cmdstring, int mode, VALUE v_show_window)
       fptr->mode |= FMODE_SYNC;
    }
 
+   // port = rb_ary_new2(3);
    port = rb_ary_new2(4);
    rb_ary_push(port,(VALUE)p1);
    rb_ary_push(port,(VALUE)p2);
    rb_ary_push(port,(VALUE)p3);
    rb_ary_push(port,UINT2NUM((DWORD)pid));
 
-  /* Child is launched. Close the parents copy of those pipe
+  /********************************************************************
+   * Child is launched. Close the parents copy of those pipe
    * handles that only the child should have open.  You need to
    * make sure that no handles to the write end of the output pipe
    * are maintained in this process or else the pipe will not close
-   * when the child process exits and the ReadFile() will hang.
-   */
+   * when the child process exits and the ReadFile will hang.
+   ********************************************************************/
 
    if (!CloseHandle(hChildStdinRd)) {
-      rb_raise(rb_eRuntimeError, "CloseHandle() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+      rb_raise(rb_eRuntimeError,"CloseHandle");
    }
 
    if (!CloseHandle(hChildStdoutWr)) {
-      rb_raise(rb_eRuntimeError, "CloseHandle() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+      rb_raise(rb_eRuntimeError,"CloseHandle");
    }
 
    if(!CloseHandle(hChildStderrWr)) {
-      rb_raise(rb_eRuntimeError, "CloseHandle() failed: %s",
-         ErrorDescription(GetLastError())
-      );
+      rb_raise(rb_eRuntimeError,"CloseHandle");
+      return Qnil;
    }
-   
    return port;
 }
 
@@ -519,6 +487,6 @@ Init_open3()
    VALUE mOpen3 = rb_define_module("Open3");
    VALUE mOpen4 = rb_define_module("Open4");
 
-   rb_define_module_function(mOpen3, "popen3", win32_popen3, -1);
-   rb_define_module_function(mOpen4, "popen4", win32_popen3, -1);
+   rb_define_module_function(mOpen3,"popen3",win32_popen3,-1);
+   rb_define_module_function(mOpen4,"popen4",win32_popen3,-1);
 }
