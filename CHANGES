@@ -1,2 +1,7 @@
+== 0.1.1 - 12-Jun-2006
+* Fixed Bug 4742 
+  - open3.so Open4 fails to return Process::Status on Windows 2000.
+  - Thanks to Park Heesob!
+  
 == 0.1.0 - 10-Jun-2006
 * Initial release
