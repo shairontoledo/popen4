@@ -1,5 +1,5 @@
 require 'rubygems'
-require_gem 'Platform', '>= 0.4.0'
+#require_gem 'Platform', '>= 0.4.0'
 
 case Platform::OS
   
@@ -73,7 +73,7 @@ when :win32
   
 else # unix popen4 yields pid, stdin, stdout and stderr, respectively
   # :enddoc:
-  require_gem 'open4', '>= 0.4.0'
+  require 'open4'
   module POpen4
     def self.popen4(command, mode = "t")
       begin
